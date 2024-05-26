@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar System Simulator</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        .controls { position: absolute; top: 10px; left: 10px; }
+        .controls button { margin: 5px; }
+    </style>
+</head>
+<body>
+<div class="controls">
+    <button onclick="locatePlanet('Mercury')">Mercury</button>
+    <button onclick="locatePlanet('Venus')">Venus</button>
+    <button onclick="locatePlanet('Earth')">Earth</button>
+    <button onclick="locatePlanet('Mars')">Mars</button>
+    <button onclick="locatePlanet('Jupiter')">Jupiter</button>
+    <button onclick="locatePlanet('Saturn')">Saturn</button>
+    <button onclick="locatePlanet('Uranus')">Uranus</button>
+    <button onclick="locatePlanet('Neptune')">Neptune</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // Basic Three.js setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Create Sun
+    const sunGeometry = new THREE.SphereGeometry(50, 64, 64); // Increased segments for smoother sphere
+    const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    scene.add(sun);
+
+    // Planet data with increased scale
+    const planets = [
+        { name: 'Mercury', size: 2, color: 0xaaaaaa, distance: 390, speed: 0.04 },
+        { name: 'Venus', size: 6, color: 0xffa500, distance: 720, speed: 0.015 },
+        { name: 'Earth', size: 6.4, color: 0x0000ff, distance: 1000, speed: 0.01 },
+        { name: 'Mars', size: 3.4, color: 0xff0000, distance: 1520, speed: 0.008 },
+        { name: 'Jupiter', size: 64, color: 0xffe5b4, distance: 5200, speed: 0.002 },
+        { name: 'Saturn', size: 54, color: 0xffd700, distance: 9540, speed: 0.001 },
+        { name: 'Uranus', size: 22, color: 0x00ffff, distance: 19200, speed: 0.0006 },
+        { name: 'Neptune', size: 20, color: 0x0000ff, distance: 30060, speed: 0.0005 },
+    ];
+
+    // Create Planets
+    const planetMeshes = [];
+    planets.forEach((planetData) => {
+        const geometry = new THREE.SphereGeometry(planetData.size, 64, 64); // Increased segments for smoother sphere
+        const material = new THREE.MeshBasicMaterial({ color: planetData.color });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(planetData.distance, 0, 0); // Scaled distance
+        scene.add(mesh);
+        planetMeshes.push({ mesh, speed: planetData.speed, distance: planetData.distance, name: planetData.name }); // Scaled distance
+    });
+
+    // Set camera position
+    camera.position.z = 5000; // Adjusted camera position for better view
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate each planet around the sun
+        planetMeshes.forEach((planet) => {
+            const angle = Date.now() * 0.0001 * planet.speed;
+            planet.mesh.position.x = Math.cos(angle) * planet.distance;
+            planet.mesh.position.z = Math.sin(angle) * planet.distance;
+        });
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Locate planet function
+    function locatePlanet(name) {
+        const planet = planetMeshes.find(p => p.name === name);
+        if (planet) {
+            camera.position.set(planet.mesh.position.x, planet.mesh.position.y + 200, planet.mesh.position.z + 200);
+            // Optionally, adjust the camera's lookAt if needed
+            camera.lookAt(planet.mesh.position);
+        }
+    }
+
+</script>
+</body>
+</html>
