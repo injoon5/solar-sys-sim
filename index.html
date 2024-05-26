@@ -31,7 +31,7 @@
     document.body.appendChild(renderer.domElement);
 
     // Create Sun
-    const sunGeometry = new THREE.SphereGeometry(50, 64, 64); // Increased segments for smoother sphere
+    const sunGeometry = new THREE.SphereGeometry(50, 64, 64); 
     const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
     const sun = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sun);
@@ -51,7 +51,7 @@
     // Create Planets
     const planetMeshes = [];
     planets.forEach((planetData) => {
-        const geometry = new THREE.SphereGeometry(planetData.size, 64, 64); // Increased segments for smoother sphere
+        const geometry = new THREE.SphereGeometry(planetData.size, 64, 64); 
         const material = new THREE.MeshBasicMaterial({ color: planetData.color });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(planetData.distance, 0, 0); // Scaled distance
@@ -60,7 +60,7 @@
     });
 
     // Set camera position
-    camera.position.z = 5000; // Adjusted camera position for better view
+    camera.position.z = 5000; 
 
     // Animation loop
     function animate() {
@@ -83,7 +83,6 @@
         const planet = planetMeshes.find(p => p.name === name);
         if (planet) {
             camera.position.set(planet.mesh.position.x, planet.mesh.position.y + 200, planet.mesh.position.z + 200);
-            // Optionally, adjust the camera's lookAt if needed
             camera.lookAt(planet.mesh.position);
         }
     }
