@@ -1,32 +1,215 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Solar System Simulator</title>
-    <style>
-        body { margin: 0; }
-        canvas { display: block; }
-        .controls { position: absolute; top: 10px; left: 10px; }
-        .controls button { margin: 5px; }
-    </style>
-    <script type="module" src="/main.js"></script>
-</head>
-<body>
-<div class="controls">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Solar System Simulator</title>
+        <style>
+            body {
+                margin: 0;
+            }
+            canvas {
+                display: block;
+            }
+            .controls {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+            }
+            .controls button {
+                margin: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="controls"></div>
+        <script type="module">
+            import * as THREE from "three";
+            import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
+            // Basic Three.js setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000000000000000000000,
+            );
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
 
-    <button onclick="locatePlanet('Mercury')">Mercury</button>
-    <button onclick="locatePlanet('Venus')">Venus</button>
-    <button onclick="locatePlanet('Earth')">Earth</button>
-    <button onclick="locatePlanet('Mars')">Mars</button>
-    <button onclick="locatePlanet('Jupiter')">Jupiter</button>
-    <button onclick="locatePlanet('Saturn')">Saturn</button>
-    <button onclick="locatePlanet('Uranus')">Uranus</button>
-    <button onclick="locatePlanet('Neptune')">Neptune</button>
-</div>
-<script>
-    // Locate planet function
+            const controls = new OrbitControls(camera, renderer.domElement);
+            camera.position.set(0, 50, 150);
+            controls.update();
 
-</script>
-</body>
+            // Create Sun
+            const sunGeometry = new THREE.SphereGeometry(
+                1391400 * 0.001,
+                64,
+                64,
+            );
+            const sunMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffff00,
+            });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+
+            // Planet data with increased scale and proper textures
+            const planets = [
+                {
+                    name: "Mercury",
+                    size: 4879 * 0.001,
+                    distance: 57900000 * 0.001,
+                    color: 0xaaaaaa,
+                    speed: 4.74,
+                },
+                {
+                    name: "Venus",
+                    size: 12104 * 0.001,
+                    distance: 108200000 * 0.001,
+                    color: 0xffc0cb,
+                    speed: 3.5,
+                },
+                {
+                    name: "Earth",
+                    size: 12756 * 0.001,
+                    distance: 149600000 * 0.001,
+                    color: 0x0000ff,
+                    speed: 2.98,
+                },
+                {
+                    name: "Mars",
+                    size: 6792 * 0.001,
+                    distance: 227900000 * 0.001,
+                    color: 0x0000ff,
+                    speed: 2.41,
+                },
+                {
+                    name: "Jupiter",
+                    size: 142984 * 0.001,
+                    distance: 778600000 * 0.001,
+                    color: 0xffa500,
+                    speed: 1.31,
+                },
+                {
+                    name: "Saturn",
+                    size: 120536 * 0.001,
+                    distance: 1433500000 * 0.001,
+                    color: 0xffff00,
+                    speed: 0.97,
+                },
+                {
+                    name: "Uranus",
+                    size: 51118 * 0.001,
+                    distance: 2872500000 * 0.001,
+                    color: 0x00ffff,
+                    speed: 0.68,
+                },
+                {
+                    name: "Neptune",
+                    size: 49528 * 0.001,
+                    distance: 4495100000 * 0.001,
+                    color: 0x0000ff,
+                    speed: 0.54,
+                },
+            ];
+
+            const planetMeshes = [];
+            planets.forEach((planetData) => {
+                const geometry = new THREE.SphereGeometry(
+                    planetData.size * 100,
+                    64,
+                    64,
+                );
+                const material = new THREE.MeshBasicMaterial({
+                    color: planetData.color,
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(planetData.distance, 0, 0);
+                scene.add(mesh);
+
+                const curve = new THREE.EllipseCurve(
+                    0,
+                    0,
+                    planetData.distance,
+                    planetData.distance,
+                    0,
+                    2 * Math.PI,
+                    false,
+                    0,
+                );
+                const points = curve.getPoints(100);
+                const orbitGeometry = new THREE.BufferGeometry().setFromPoints(
+                    points,
+                );
+                const orbitMaterial = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                });
+                const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                scene.add(orbit);
+
+                planetMeshes.push({
+                    mesh,
+                    speed: planetData.speed,
+                    distance: planetData.distance,
+                    name: planetData.name,
+                });
+                console.log(planetData.name, mesh.position.x);
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                planetMeshes.forEach((planet) => {
+                    const angle = Date.now() * 0.0001 * planet.speed;
+                    planet.mesh.position.x = Math.cos(angle) * planet.distance;
+                    planet.mesh.position.z = Math.sin(angle) * planet.distance;
+                });
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            function locatePlanet(name) {
+                const planet = planetMeshes.find((p) => p.name === name);
+                if (planet) {
+                    camera.position.set(
+                        planet.mesh.position.x,
+                        planet.mesh.position.y + 20,
+                        planet.mesh.position.z + 50,
+                    );
+                    camera.lookAt(planet.mesh.position);
+                    controls.update();
+                }
+            }
+
+            const planetsList = [
+                "Mercury",
+                "Venus",
+                "Earth",
+                "Mars",
+                "Jupiter",
+                "Saturn",
+                "Uranus",
+                "Neptune",
+            ];
+
+            const controlsDiv = document.getElementsByClassName("controls")[0];
+            planetsList.forEach((planet) => {
+                const button = document.createElement("button");
+                button.textContent = planet;
+                button.onclick = () => locatePlanet(planet);
+                controlsDiv.appendChild(button);
+            });
+
+            window.addEventListener("resize", () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        </script>
+    </body>
 </html>
