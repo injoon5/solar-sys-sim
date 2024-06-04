@@ -54,7 +54,7 @@
             );
             const renderer = new THREE.WebGLRenderer({
                 antialias: true,
-                //logarithmicDepthBuffer: true,
+                // logarithmicDepthBuffer: true,
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
@@ -156,114 +156,76 @@
             ];
 
             const planetMeshes = [];
-            const fontLoader = new FontLoader();
-            fontLoader.load(
-                "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
-                (font) => {
-                    planets.forEach((planetData) => {
-                        const geometry = new THREE.SphereGeometry(
-                            planetData.size * 100,
-                            64,
-                            64,
-                        );
-                        const material = new THREE.MeshBasicMaterial({
-                            map: textureLoader.load(planetData.texture),
-                            opacity: 1,
-                        });
-                        const mesh = new THREE.Mesh(geometry, material);
-                        mesh.position.set(planetData.distance, 0, 0);
-                        mesh.rotation.z = planetData.tilt;
-                        scene.add(mesh);
 
-                        // Add rings to Saturn and Uranus
-                        if (planetData.hasRings) {
-                            const ringGeometry = new THREE.RingGeometry(
-                                planetData.size * 1.2 * 100,
-                                planetData.size * 2.2 * 100,
-                                64,
-                            );
-                            const ringMaterial = new THREE.MeshBasicMaterial({
-                                map: textureLoader.load(planetData.ringTexture),
-                                side: THREE.DoubleSide,
-                                transparent: false,
-                            });
-                            const rings = new THREE.Mesh(
-                                ringGeometry,
-                                ringMaterial,
-                            );
-                            rings.rotation.x = Math.PI / 2;
-                            mesh.add(rings);
-                        }
+            planets.forEach((planetData) => {
+                const geometry = new THREE.SphereGeometry(
+                    planetData.size,
+                    64,
+                    64,
+                );
+                const material = new THREE.MeshBasicMaterial({
+                    map: textureLoader.load(planetData.texture),
+                    opacity: 1,
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(planetData.distance, 0, 0);
+                mesh.rotation.z = planetData.tilt;
+                scene.add(mesh);
 
-                        const curve = new THREE.EllipseCurve(
-                            0,
-                            0,
-                            planetData.distance,
-                            planetData.distance,
-                            0,
-                            2 * Math.PI,
-                            false,
-                            0,
-                        );
-                        const points = curve.getPoints(200); // Increased points for smoother orbit
-                        const orbitGeometry =
-                            new THREE.BufferGeometry().setFromPoints(points);
-                        const orbitMaterial = new THREE.LineBasicMaterial({
-                            color: 0xffffff,
-                        });
-                        const orbit = new THREE.Line(
-                            orbitGeometry,
-                            orbitMaterial,
-                        );
-                        orbit.rotation.x = Math.PI / 2;
-                        scene.add(orbit);
-
-                        // Add text
-                        const textGeometry = new TextGeometry(planetData.name, {
-                            font: font,
-                            size: 10,
-                            depth: 1,
-                        });
-                        const textMaterial = new THREE.MeshBasicMaterial({
-                            color: 0xffffff,
-                        });
-                        const textMesh = new THREE.Mesh(
-                            textGeometry,
-                            textMaterial,
-                        );
-                        textMesh.position.set(
-                            planetData.distance,
-                            planetData.size * 120,
-                            0,
-                        );
-                        scene.add(textMesh);
-
-                        planetMeshes.push({
-                            mesh,
-                            textMesh,
-                            speed: planetData.speed,
-                            distance: planetData.distance,
-                            name: planetData.name,
-                            rotationSpeed: planetData.rotationSpeed,
-                        });
+                // Add rings to Saturn and Uranus
+                if (planetData.hasRings) {
+                    const ringGeometry = new THREE.RingGeometry(
+                        planetData.size * 1.2,
+                        planetData.size * 2.2,
+                        64,
+                    );
+                    const ringMaterial = new THREE.MeshBasicMaterial({
+                        map: textureLoader.load(planetData.ringTexture),
+                        side: THREE.DoubleSide,
+                        transparent: false,
                     });
-                },
-            );
+                    const rings = new THREE.Mesh(ringGeometry, ringMaterial);
+                    rings.rotation.x = Math.PI / 2;
+                    mesh.add(rings);
+                }
+
+                const curve = new THREE.EllipseCurve(
+                    0,
+                    0,
+                    planetData.distance,
+                    planetData.distance,
+                    0,
+                    2 * Math.PI,
+                    false,
+                    0,
+                );
+                const points = curve.getPoints(200); // Increased points for smoother orbit
+                const orbitGeometry = new THREE.BufferGeometry().setFromPoints(
+                    points,
+                );
+                const orbitMaterial = new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                });
+                const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                scene.add(orbit);
+
+                planetMeshes.push({
+                    mesh,
+                    speed: planetData.speed,
+                    distance: planetData.distance,
+                    name: planetData.name,
+                    rotationSpeed: planetData.rotationSpeed,
+                });
+            });
 
             function animate() {
                 requestAnimationFrame(animate);
 
                 planetMeshes.forEach((planet) => {
-                    const angle = Date.now() * 0.0001 * planet.speed;
+                    const angle = Date.now() * 0.000001 * planet.speed;
                     planet.mesh.position.x = Math.cos(angle) * planet.distance;
                     planet.mesh.position.z = Math.sin(angle) * planet.distance;
-
-                    // Move the text with the planet
-                    planet.textMesh.position.x = planet.mesh.position.x;
-                    planet.textMesh.position.z = planet.mesh.position.z;
-                    planet.textMesh.position.y =
-                        planet.mesh.position.y +
-                        planet.mesh.geometry.parameters.radius * 1.5;
 
                     // Rotate the planets
                     planet.mesh.rotation.y += planet.rotationSpeed * 0.01;
@@ -282,30 +244,33 @@
                 let planet = planetMeshes.find((p) => p.name === name);
                 if (planet) {
                     let planetData = planets.find((p) => p.name === name);
-                    const followDistance = planetData.size * 500;
-                    const followHeight = planetData.size * 500;
+                    const followDistance = planetData.size * 10;
+                    const followHeight = planetData.size;
 
                     function updateCamera() {
-                        if (stopFollowing) return;
-                        requestAnimationFrame(updateCamera);
-                        camera.position.set(
-                            planet.mesh.position.x - followDistance,
-                            planet.mesh.position.y + followHeight,
-                            planet.mesh.position.z - followDistance,
-                        );
-                        camera.lookAt(planet.mesh.position);
-                        controls.target = planet.mesh.position;
-                        controls.update();
+                        if (stopFollowing) {
+                            return;
+                        } else {
+                            requestAnimationFrame(updateCamera);
+                            camera.position.set(
+                                planet.mesh.position.x - followDistance,
+                                planet.mesh.position.y + followHeight,
+                                planet.mesh.position.z - followDistance,
+                            );
+                            camera.lookAt(planet.mesh.position);
+                            controls.target = planet.mesh.position;
+                            controls.update();
+                        }
                     }
 
                     updateCamera();
 
                     // Show info panel
                     planetNameElement.textContent = planetData.name;
-                    planetInfoElement.textContent = `Size: ${planetData.size * 100} km
-Distance from Sun: ${planetData.distance * 100} km
-Speed: ${planetData.speed}
-Rotation Speed: ${planetData.rotationSpeed}`;
+                    planetInfoElement.textContent = `Size: ${planetData.size} km
+            Distance from Sun: ${planetData.distance} km
+            Speed: ${planetData.speed}
+            Rotation Speed: ${planetData.rotationSpeed}`;
                     infoPanel.style.display = "block";
                 }
             }
@@ -316,9 +281,10 @@ Rotation Speed: ${planetData.rotationSpeed}`;
                 camera.lookAt(0, 0, 0); // Look down at the center of the solar system
                 controls.target.set(0, 0, 0); // Set the controls target to the center of the solar system
                 controls.update();
-                infoPanel.style.display = "none";
             }
+
             backToMainView();
+
             const planetsList = [
                 "Mercury",
                 "Venus",
